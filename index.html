@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Real-Time Rpi2 System Monitor</title>
+    <style>
+      .row {
+        display: flex;
+      }
+      .col {
+        flex: 1;
+      }
+    </style>
+    <script src="https://cdn.socket.io/socket.io-1.4.3.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/smoothie/1.27.0/smoothie.js"></script>
+  </head>
+  <body>
+    <div id="monitoring-container" class="row">
+      <div id="temp-monitor" class="col">
+        <div>
+          <h2> Temperature (&deg;C) </h2>
+        </div>
+        <div>
+          <canvas id="temp" width="400px" height="200px"></canvas>
+        </div>
+      </div>
+      <div id="cpu-monitor" class="col">
+        <div>
+          <h2> CPU load (%) </h2>
+        </div>
+        <div>
+          <canvas id="cpu" width="400px" height="200px"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var socket = io({ transports: ['websocket'] });
+      var DELAY = 500;
+
+      var temp_chart = new SmoothieChart({grid:{verticalSections:5}});
+      var cpu_chart = new SmoothieChart({grid:{verticalSections:5}});
+
+      var temp_line = new TimeSeries();
+      var cpu_line = new TimeSeries();
+
+      temp_chart.streamTo(document.getElementById("temp"), 500);
+      cpu_chart.streamTo(document.getElementById("cpu"), 500);
+
+      temp_chart.addTimeSeries(temp_line, {lineWidth:1.0, strokeStyle:'#ff9165'});
+      cpu_chart.addTimeSeries(cpu_line, {lineWidth:1.0, strokeStyle:'#828fff'});
+
+      socket.on('data', function(data) {
+        temp_line.append(new Date().getTime(), data);
+      });
+
+      socket.on('cpu', function(data) {
+        cpu_line.append(new Date().getTime(), data);
+      });
+    </script>
+  </body>
+</html>
